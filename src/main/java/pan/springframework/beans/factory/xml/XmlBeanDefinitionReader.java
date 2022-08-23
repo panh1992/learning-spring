@@ -1,4 +1,4 @@
-package pan.springframework.beans.factory.support.xml;
+package pan.springframework.beans.factory.xml;
 
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.XmlUtil;

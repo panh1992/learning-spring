@@ -1,7 +1,7 @@
 package pan.springframework.context.support;
 
 import pan.springframework.beans.factory.support.DefaultListableBeanFactory;
-import pan.springframework.beans.factory.support.xml.XmlBeanDefinitionReader;
+import pan.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 
 import java.util.Objects;
 
