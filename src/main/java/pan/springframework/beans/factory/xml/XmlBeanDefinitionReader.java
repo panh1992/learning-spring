@@ -66,17 +66,19 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node item = childNodes.item(i);
-            if (!(item instanceof Element bean)) {
+            if (!(item instanceof Element)) {
                 continue;
             }
             if (!"bean".equals(item.getNodeName())) {
                 continue;
             }
+            Element bean = (Element) item;
             String id = bean.getAttribute("id");
             String name = bean.getAttribute("name");
             String className = bean.getAttribute("class");
             String initMethod = bean.getAttribute("init-method");
             String destroyMethodName = bean.getAttribute("destroy-method");
+            String beanScope = bean.getAttribute("scope");
 
             // 获取 Class，方便获取类中的名称
             Class<?> clazz = Class.forName(className);
@@ -90,15 +92,19 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
             BeanDefinition beanDefinition = new BeanDefinition(clazz);
             beanDefinition.setInitMethodName(initMethod);
             beanDefinition.setDestroyMethodName(destroyMethodName);
+            if (CharSequenceUtil.isNotEmpty(beanScope)) {
+                beanDefinition.setScope(beanScope);
+            }
 
             // 读取属性并填充
             for (int j = 0; j < bean.getChildNodes().getLength(); j++) {
-                if (!(bean.getChildNodes().item(j) instanceof Element property)) {
+                if (!(bean.getChildNodes().item(j) instanceof Element)) {
                     continue;
                 }
                 if (!"property".equals(bean.getChildNodes().item(j).getNodeName())) {
                     continue;
                 }
+                Element property = (Element) bean.getChildNodes().item(j);
                 // 解析标签：property
                 String attrName = property.getAttribute("name");
                 String attrValue = property.getAttribute("value");

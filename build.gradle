@@ -5,8 +5,8 @@ plugins {
 group 'org.example'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility=JavaVersion.VERSION_17
-targetCompatibility=JavaVersion.VERSION_17
+sourceCompatibility=JavaVersion.VERSION_11
+targetCompatibility=JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
@@ -17,6 +17,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
     implementation 'cglib:cglib:3.3.0'
     implementation 'cn.hutool:hutool-all:5.8.5'
+    implementation 'org.openjdk.jol:jol-cli:0.16'
 }
 
 test {
