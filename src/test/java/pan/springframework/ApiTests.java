@@ -1,17 +1,22 @@
 package pan.springframework;
 
 import org.aopalliance.intercept.MethodInterceptor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pan.springframework.aop.AdvisedSupport;
+import pan.springframework.aop.ClassFilter;
 import pan.springframework.aop.MethodMatcher;
 import pan.springframework.aop.TargetSource;
 import pan.springframework.aop.aspectj.AspectJExpressionPointcut;
-import pan.springframework.aop.framework.Cglib2AopProxy;
-import pan.springframework.aop.framework.JdkDynamicAopProxy;
+import pan.springframework.aop.aspectj.AspectJExpressionPointcutAdvisor;
+import pan.springframework.aop.framework.ProxyFactory;
 import pan.springframework.aop.framework.ReflectiveMethodInvocation;
+import pan.springframework.aop.framework.adapter.MethodBeforeAdviceInterceptor;
 import pan.springframework.bean.IUserService;
 import pan.springframework.bean.UserService;
+import pan.springframework.bean.UserServiceBeforeAdvice;
 import pan.springframework.bean.UserServiceInterceptor;
+import pan.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -19,44 +24,67 @@ import java.lang.reflect.Proxy;
 
 class ApiTests {
 
-    @Test
-    void test_aop() throws NoSuchMethodException {
-        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut("execution(* pan.springframework.bean.UserService.*(..))");
+    private AdvisedSupport advisedSupport;
 
-        Class<UserService> clazz = UserService.class;
-        Method method = clazz.getDeclaredMethod("queryUserInfo");
-
-        System.out.println(pointcut.matches(clazz));
-        System.out.println(pointcut.matches(method, clazz));
-    }
-
-    @Test
-    void test_dynamic() {
+    @BeforeEach
+    public void init() {
         // 目标对象
         IUserService userService = new UserService();
         // 组装代理信息
-        AdvisedSupport advisedSupport = new AdvisedSupport();
+        advisedSupport = new AdvisedSupport();
         advisedSupport.setTargetSource(new TargetSource(userService));
         advisedSupport.setMethodInterceptor(new UserServiceInterceptor());
         advisedSupport.setMethodMatcher(new AspectJExpressionPointcut("execution(* pan.springframework.bean.IUserService.*(..))"));
-
-        // 代理对象(JdkDynamicAopProxy)
-        IUserService proxy_jdk = (IUserService) new JdkDynamicAopProxy(advisedSupport).getProxy();
-        // 测试调用
-        System.out.println("测试结果：" + proxy_jdk.queryUserInfo());
-
-        // 代理对象(Cglib2AopProxy)
-        IUserService proxy_cglib = (IUserService) new Cglib2AopProxy(advisedSupport).getProxy();
-        // 测试调用
-        System.out.println("测试结果：" + proxy_cglib.register("花花"));
     }
 
     @Test
-    void test_proxy_class() {
-        IUserService userService = (IUserService) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[]{IUserService.class}, (proxy, method, args) -> "你被代理了！");
-        String result = userService.queryUserInfo();
-        System.out.println("测试结果：" + result);
+    void test_proxyFactory() {
+        advisedSupport.setProxyTargetClass(false); // false/true，JDK动态代理、CGlib动态代理
+        IUserService proxy = (IUserService) new ProxyFactory(advisedSupport).getProxy();
 
+        System.out.println("测试结果：" + proxy.queryUserInfo());
+    }
+
+    @Test
+    void test_beforeAdvice() {
+        UserServiceBeforeAdvice beforeAdvice = new UserServiceBeforeAdvice();
+        MethodBeforeAdviceInterceptor interceptor = new MethodBeforeAdviceInterceptor(beforeAdvice);
+        advisedSupport.setMethodInterceptor(interceptor);
+
+        IUserService proxy = (IUserService) new ProxyFactory(advisedSupport).getProxy();
+        System.out.println("测试结果：" + proxy.queryUserInfo());
+    }
+
+    @Test
+    void test_advisor() {
+        // 目标对象
+        IUserService userService = new UserService();
+
+        AspectJExpressionPointcutAdvisor advisor = new AspectJExpressionPointcutAdvisor();
+        advisor.setExpression("execution(* pan.springframework.bean.IUserService.*(..))");
+        advisor.setAdvice(new MethodBeforeAdviceInterceptor(new UserServiceBeforeAdvice()));
+
+        ClassFilter classFilter = advisor.getPointcut().getClassFilter();
+        if (classFilter.matches(userService.getClass())) {
+            AdvisedSupport advisedSupport = new AdvisedSupport();
+
+            TargetSource targetSource = new TargetSource(userService);
+            advisedSupport.setTargetSource(targetSource);
+            advisedSupport.setMethodInterceptor((MethodInterceptor) advisor.getAdvice());
+            advisedSupport.setMethodMatcher(advisor.getPointcut().getMethodMatcher());
+            advisedSupport.setProxyTargetClass(true); // false/true，JDK动态代理、CGlib动态代理
+
+            IUserService proxy = (IUserService) new ProxyFactory(advisedSupport).getProxy();
+            System.out.println("测试结果：" + proxy.queryUserInfo());
+        }
+    }
+
+    @Test
+    void test_aop() {
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
+
+        IUserService userService = applicationContext.getBean("userService", IUserService.class);
+        System.out.println("测试结果：" + userService.queryUserInfo());
     }
 
     @Test
@@ -67,7 +95,7 @@ class ApiTests {
         // AOP 代理
         IUserService proxy = (IUserService) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), targetObj.getClass().getInterfaces(), new InvocationHandler() {
             // 方法匹配器
-            MethodMatcher methodMatcher = new AspectJExpressionPointcut("execution(* pan.springframework.bean.IUserService.*(..))");
+            final MethodMatcher methodMatcher = new AspectJExpressionPointcut("execution(* pan.springframework.bean.IUserService.*(..))");
 
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {

@@ -15,6 +15,7 @@ import pan.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import pan.springframework.beans.factory.config.BeanDefinition;
 import pan.springframework.beans.factory.config.BeanPostProcessor;
 import pan.springframework.beans.factory.config.BeanReference;
+import pan.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -29,6 +30,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         Object bean;
 
         try {
+            // 判断是否返回代理 Bean 对象
+            bean = resolveBeforeInstantiation(beanName, beanDefinition);
+            if (null != bean) {
+                return bean;
+            }
             bean = createBeanInstance(beanName, beanDefinition, args);
             // 给Bean填充属性
             applyPropertyValues(beanName, bean, beanDefinition);
@@ -47,6 +53,27 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         }
 
         return bean;
+    }
+
+    protected Object resolveBeforeInstantiation(String beanName, BeanDefinition beanDefinition) {
+        Object bean = applyBeanPostProcessorsBeforeInstantiation(beanDefinition.getBeanClass(), beanName);
+        if (Objects.nonNull(bean)) {
+            bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+        }
+        return bean;
+    }
+
+    protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName) {
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor)
+                        .postProcessBeforeInstantiation(beanClass, beanName);
+                if (Objects.nonNull(result)) {
+                    return result;
+                }
+            }
+        }
+        return null;
     }
 
     private Object createBeanInstance(String beanName, BeanDefinition beanDefinition, Object[] args) {
