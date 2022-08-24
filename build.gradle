@@ -18,6 +18,8 @@ dependencies {
     implementation 'cglib:cglib:3.3.0'
     implementation 'cn.hutool:hutool-all:5.8.5'
     implementation 'org.openjdk.jol:jol-cli:0.16'
+    implementation 'org.aspectj:aspectjweaver:1.9.9.1'
+    implementation 'aopalliance:aopalliance:1.0'
 }
 
 test {
