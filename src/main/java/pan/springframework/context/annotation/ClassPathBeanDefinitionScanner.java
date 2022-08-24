@@ -1,7 +1,7 @@
 package pan.springframework.context.annotation;
 
 import cn.hutool.core.text.CharSequenceUtil;
-import cn.hutool.core.util.StrUtil;
+import pan.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
 import pan.springframework.beans.factory.config.BeanDefinition;
 import pan.springframework.beans.factory.support.BeanDefinitionRegistry;
 import pan.springframework.stereotype.Component;
@@ -33,6 +33,10 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
                 registry.registerBeanDefinition(determineBeanName(beanDefinition), beanDefinition);
             }
         }
+
+        // 注册处理注解的 BeanPostProcessor（@Autowired、@Value）
+        registry.registerBeanDefinition("pan.springframework.context.annotation.internalAutowiredAnnotationProcessor",
+                new BeanDefinition(AutowiredAnnotationBeanPostProcessor.class));
     }
 
     private String resolveBeanScope(BeanDefinition beanDefinition) {
@@ -48,8 +52,8 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
         Class<?> beanClass = beanDefinition.getBeanClass();
         Component component = beanClass.getAnnotation(Component.class);
         String value = component.value();
-        if (StrUtil.isEmpty(value)) {
-            value = StrUtil.lowerFirst(beanClass.getSimpleName());
+        if (CharSequenceUtil.isEmpty(value)) {
+            value = CharSequenceUtil.lowerFirst(beanClass.getSimpleName());
         }
         return value;
     }
