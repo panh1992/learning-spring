@@ -1,5 +1,7 @@
 package pan.springframework.context.support;
 
+import pan.springframework.context.ApplicationEvent;
+
 public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContext {
 
     private String[] configLocations;
@@ -20,4 +22,5 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
     protected String[] getConfigLocations() {
         return configLocations;
     }
+
 }

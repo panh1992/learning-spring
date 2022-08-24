@@ -10,4 +10,10 @@
 
     <bean id="proxyUserDao" class="pan.springframework.bean.ProxyBeanFactory"/>
 
+    <bean class="pan.springframework.event.ContextRefreshedEventListener"/>
+
+    <bean class="pan.springframework.event.CustomEventListener"/>
+
+    <bean class="pan.springframework.event.ContextClosedEventListener"/>
+
 </beans>
