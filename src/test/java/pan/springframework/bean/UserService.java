@@ -1,18 +1,10 @@
 package pan.springframework.bean;
 
-import pan.springframework.beans.factory.annotation.Autowired;
-import pan.springframework.beans.factory.annotation.Value;
-import pan.springframework.stereotype.Component;
-
 import java.util.Random;
-@Component("userService")
+
 public class UserService implements IUserService {
 
-    @Value("${token}")
     private String token;
-
-    @Autowired
-    private UserDao userDao;
 
     public String queryUserInfo() {
         try {
@@ -20,7 +12,7 @@ public class UserService implements IUserService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return userDao.queryUserName("10001") + "，" + token;
+        return "测试，100001，深圳，" + token;
     }
 
     public String register(String userName) {
@@ -32,11 +24,6 @@ public class UserService implements IUserService {
         return "注册用户：" + userName + " success！";
     }
 
-    @Override
-    public String toString() {
-        return "UserService#token = { " + token + " }";
-    }
-
     public String getToken() {
         return token;
     }
@@ -45,11 +32,4 @@ public class UserService implements IUserService {
         this.token = token;
     }
 
-    public UserDao getUserDao() {
-        return userDao;
-    }
-
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
-    }
 }
